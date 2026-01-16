@@ -1,22 +1,60 @@
 import json
 import os
-import re
 from urllib.parse import urlparse
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "..", "data", "processed")
 
-def load_json(name):
-    with open(os.path.join(DATA_DIR, name), "r", encoding="utf-8") as f:
+BLACKLIST_FILE = os.path.join(DATA_DIR, "blacklist_domains.json")
+KEYWORDS_FILE = os.path.join(DATA_DIR, "suspicious_keywords.json")
+PHISHING_FILE = os.path.join(DATA_DIR, "phishing_samples.json")
+
+# ================== INIT DATA SAFE ==================
+
+def ensure_data():
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+    # Tạo dữ liệu mẫu nếu thiếu (để app không crash khi deploy)
+    if not os.path.exists(BLACKLIST_FILE):
+        with open(BLACKLIST_FILE, "w", encoding="utf-8") as f:
+            json.dump(
+                ["fake-login.site", "scam-voucher.xyz", "secure-update.top"],
+                f, indent=2, ensure_ascii=False
+            )
+
+    if not os.path.exists(KEYWORDS_FILE):
+        with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
+            json.dump(
+                ["dangnhap", "xacminh", "baomat", "capnhat", "trungthuong"],
+                f, indent=2, ensure_ascii=False
+            )
+
+    if not os.path.exists(PHISHING_FILE):
+        with open(PHISHING_FILE, "w", encoding="utf-8") as f:
+            json.dump(
+                ["http://fake-login.site/verify?id=123"],
+                f, indent=2, ensure_ascii=False
+            )
+
+ensure_data()
+
+# ================== LOAD DATA ==================
+
+def load_json(path):
+    with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-BLACKLIST = set(load_json("blacklist_domains.json"))
-KEYWORDS = set(load_json("suspicious_keywords.json"))
-PHISHING_DATA = set(load_json("phishing_samples.json"))
+BLACKLIST = set(load_json(BLACKLIST_FILE))
+KEYWORDS = set(load_json(KEYWORDS_FILE))
+PHISHING_DATA = set(load_json(PHISHING_FILE))
+
+# ================== CONFIG ==================
 
 SHORTENER_DOMAINS = {
     "bit.ly", "tinyurl.com", "t.co", "goo.gl", "rebrand.ly", "cutt.ly"
 }
+
+# ================== CORE ==================
 
 def normalize_domain(url):
     try:
