@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>TrustQR - Trung tâm An ninh mạng</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Fonts: Be Vietnam Pro (Chuẩn Tiếng Việt) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Be Vietnam Pro"', "sans-serif"],
+              mono: ['"JetBrains Mono"', "monospace"],
+            },
+            colors: {
+              bg: "#0b0f19", // Darker Slate
+              panel: "#151b2b", // Dark Panel
+              primary: "#6366f1", // Indigo
+              accent: "#06b6d4", // Cyan
+              danger: "#ef4444",
+              success: "#10b981",
+            },
+            animation: {
+              "scan-beam": "scanBeam 2s linear infinite",
+            },
+            keyframes: {
+              scanBeam: {
+                "0%": { top: "0%", opacity: 0 },
+                "10%": { opacity: 1 },
+                "90%": { opacity: 1 },
+                "100%": { top: "100%", opacity: 0 },
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      /* Tinh chỉnh thanh cuộn */
+      ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 2px;
+      }
+
+      /* Glass effect */
+      .glass-panel {
+        background: rgba(21, 27, 43, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .light .glass-panel {
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      /* Focus glow */
+      .custom-input:focus-within {
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+        border-color: #6366f1;
+      }
+
+      /* Mobile specific fixes */
+      @media (max-width: 768px) {
+        .mobile-scroll-container {
+          height: auto;
+          overflow-y: visible;
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-100 text-slate-800 dark:bg-bg dark:text-slate-200 h-screen w-full flex flex-col transition-colors duration-300 font-sans overflow-hidden md:overflow-hidden"
+  >
+    <!-- HEADER -->
+    <header
+      class="h-14 flex items-center justify-between px-4 md:px-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-panel z-50 shrink-0"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="w-8 h-8 rounded bg-primary flex items-center justify-center shadow-lg shadow-indigo-500/30"
+        >
+          <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+        </div>
+        <span class="font-bold text-lg tracking-tight"
+          >TrustQR
+          <span
+            class="text-[10px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded ml-1 align-middle"
+            >PRO</span
+          ></span
+        >
+      </div>
+      <div class="flex items-center gap-3">
+        <div
+          class="hidden md:flex items-center gap-1.5 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20"
+        >
+          <span
+            class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
+          ></span>
+          <span class="text-[10px] font-bold text-emerald-500"
+            >SYSTEM ONLINE</span
+          >
+        </div>
+        <button
+          onclick="toggleTheme()"
+          class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-slate-500"
+        >
+          <i id="theme-icon" class="fa-solid fa-sun text-yellow-500"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- BODY LAYOUT -->
+    <main
+      class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden"
+    >
+      <!-- CỘT 1: INPUTS (30%) -->
+      <div
+        class="w-full md:w-[30%] border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 flex flex-col bg-white/50 dark:bg-panel/30 shrink-0"
+      >
+        <div class="p-4 md:p-5 flex flex-col gap-4 h-full md:overflow-y-auto">
+          <!-- Title Mobile Only -->
+          <div class="md:hidden flex items-center gap-2 mb-1">
+            <span class="w-1 h-3 bg-primary rounded-full"></span>
+            <h2
+              class="text-xs font-bold uppercase tracking-wider text-slate-500"
+            >
+              Nhập dữ liệu
+            </h2>
+          </div>
+
+          <!-- BLOCK 1: URL SCANNER -->
+          <div
+            class="glass-panel p-4 rounded-xl flex flex-col gap-3 group transition-colors hover:border-primary/30 shadow-sm"
+          >
+            <div class="flex justify-between items-center">
+              <label
+                class="text-xs font-bold text-primary flex items-center gap-2"
+              >
+                <i class="fa-solid fa-link"></i> QUÉT LINK URL
+              </label>
+              <span
+                class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded hidden md:inline-block"
+                >Enter để chạy</span
+              >
+            </div>
+
+            <div class="relative">
+              <input
+                id="urlInput"
+                type="text"
+                class="w-full bg-gray-50 dark:bg-bg border border-gray-200 dark:border-gray-700 rounded-lg py-3 pl-3 pr-10 text-sm focus:outline-none focus:border-primary transition-colors font-mono custom-input text-slate-800 dark:text-slate-200"
+                placeholder="https://vidu.com..."
+              />
+              <button
+                onclick="checkUrl()"
+                class="absolute right-1 top-1 bottom-1 px-3 rounded bg-primary text-white hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20"
+              >
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+            <p class="text-[10px] text-slate-500">
+              Dán đường dẫn từ SMS, Email hoặc Zalo để kiểm tra.
+            </p>
+          </div>
+
+          <!-- BLOCK 2: QR SCANNER -->
+          <div
+            class="glass-panel p-4 rounded-xl flex flex-col gap-3 group flex-1 min-h-[160px] md:min-h-[200px] relative overflow-hidden transition-colors hover:border-accent/30 shadow-sm"
+          >
+            <label
+              class="text-xs font-bold text-accent flex items-center gap-2 relative z-10"
+            >
+              <i class="fa-solid fa-qrcode"></i> QUÉT ẢNH QR
+            </label>
+
+            <input
+              id="qrFile"
+              type="file"
+              accept="image/*"
+              class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+              onchange="handleFile(this)"
+            />
+
+            <div
+              class="flex-1 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex flex-col items-center justify-center text-center p-4 group-hover:bg-accent/5 group-hover:border-accent transition-all relative"
+            >
+              <div
+                class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 dark:bg-bg flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform shadow-inner"
+              >
+                <i
+                  class="fa-solid fa-cloud-arrow-up text-lg md:text-xl text-slate-400 group-hover:text-accent"
+                ></i>
+              </div>
+              <span
+                id="fileName"
+                class="text-xs font-bold text-slate-500 group-hover:text-accent truncate w-full px-2"
+              >
+                Chạm để tải ảnh QR
+              </span>
+              <p class="text-[9px] text-slate-400 mt-1 hidden md:block">
+                Hỗ trợ .PNG, .JPG
+              </p>
+
+              <!-- Scan Beam Effect -->
+              <div
+                class="absolute inset-x-0 h-0.5 bg-accent/50 shadow-[0_0_10px_#06b6d4] animate-scan-beam hidden group-hover:block pointer-events-none"
+              ></div>
+            </div>
+
+            <button
+              id="btnScanQR"
+              onclick="scanQR()"
+              class="hidden w-full py-2.5 bg-accent hover:bg-cyan-600 text-white rounded text-xs font-bold shadow-lg shadow-cyan-500/20 z-30 relative mt-auto animate-bounce"
+            >
+              PHÂN TÍCH NGAY
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CỘT 2: MAIN SCREEN (45%) -->
+      <div
+        class="w-full md:w-[45%] bg-gray-100 dark:bg-bg relative flex flex-col min-h-[350px] md:min-h-0 shrink-0 border-b md:border-b-0 border-gray-200 dark:border-gray-800"
+      >
+        <!-- Background Grid -->
+        <div
+          class="absolute inset-0"
+          style="
+            background-image: radial-gradient(#6366f1 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.05;
+          "
+        ></div>
+
+        <div
+          class="flex-1 p-4 md:p-6 flex flex-col justify-center relative z-10 overflow-hidden"
+        >
+          <!-- IDLE -->
+          <div
+            id="view-idle"
+            class="flex flex-col items-center justify-center text-center opacity-70 scale-90 md:scale-100"
+          >
+            <div
+              class="w-24 h-24 md:w-32 md:h-32 rounded-full border border-gray-300 dark:border-gray-700 flex items-center justify-center mb-4 md:mb-6 relative"
+            >
+              <div
+                class="absolute inset-0 rounded-full border border-primary/30 animate-[ping_3s_infinite]"
+              ></div>
+              <i
+                class="fa-solid fa-radar text-3xl md:text-4xl text-slate-400"
+              ></i>
+            </div>
+            <h1
+              class="text-xl md:text-2xl font-bold text-slate-700 dark:text-white"
+            >
+              Hệ thống Sẵn sàng
+            </h1>
+            <p class="text-xs md:text-sm text-slate-500 mt-2">
+              Vui lòng nhập Link hoặc tải ảnh QR để bắt đầu.
+            </p>
+          </div>
+
+          <!-- LOADING -->
+          <div
+            id="view-loading"
+            class="hidden absolute inset-0 bg-white/90 dark:bg-bg/95 backdrop-blur z-20 flex flex-col items-center justify-center"
+          >
+            <i
+              class="fa-solid fa-circle-notch fa-spin text-3xl md:text-4xl text-primary mb-4"
+            ></i>
+            <h3
+              class="text-base md:text-lg font-bold text-primary animate-pulse"
+            >
+              ĐANG PHÂN TÍCH...
+            </h3>
+          </div>
+
+          <!-- RESULT -->
+          <div
+            id="view-result"
+            class="hidden h-full flex flex-col bg-white dark:bg-panel rounded-xl md:rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden animate-[fadeIn_0.3s]"
+          >
+            <!-- Result Header -->
+            <div
+              class="p-4 md:p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-start"
+              id="resHeader"
+            >
+              <div class="flex items-center gap-3 md:gap-4">
+                <div
+                  id="resIcon"
+                  class="w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-2xl md:text-3xl shadow-inner"
+                ></div>
+                <div>
+                  <h2
+                    id="resTitle"
+                    class="text-xl md:text-2xl font-bold leading-none mb-1"
+                  >
+                    SAFE
+                  </h2>
+                  <p
+                    id="resScore"
+                    class="font-mono text-[10px] md:text-xs text-slate-500"
+                  >
+                    Risk Score: 0/100
+                  </p>
+                </div>
+              </div>
+              <span
+                id="resBadge"
+                class="px-2 py-1 md:px-3 md:py-1 rounded text-[10px] font-bold uppercase border"
+                >Verified</span
+              >
+            </div>
+
+            <!-- Result Body -->
+            <div
+              class="p-4 md:p-6 space-y-4 md:space-y-5 flex-1 overflow-y-auto custom-scroll"
+            >
+              <div>
+                <label
+                  class="text-[10px] font-bold uppercase text-slate-400 block mb-1"
+                  >Link đích</label
+                >
+                <div
+                  class="p-2.5 bg-gray-50 dark:bg-bg rounded border border-gray-200 dark:border-gray-700 font-mono text-xs text-primary break-all select-all"
+                >
+                  <span id="resUrl">...</span>
+                </div>
+              </div>
+
+              <div
+                class="p-3 rounded-lg bg-gray-50 dark:bg-bg border border-gray-200 dark:border-gray-700"
+              >
+                <label
+                  class="text-[10px] font-bold uppercase text-slate-400 block mb-2"
+                  >Cảnh báo AI</label
+                >
+                <div id="resWarnings" class="space-y-2 text-sm"></div>
+              </div>
+
+              <div class="p-3 rounded-lg border-l-4" id="resRecBox">
+                <label
+                  class="text-[10px] font-bold uppercase text-slate-400 block mb-1"
+                  >Khuyến nghị</label
+                >
+                <p id="resRec" class="text-sm font-medium">...</p>
+              </div>
+            </div>
+
+            <div
+              class="p-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-bg/50 text-center"
+            >
+              <button
+                onclick="resetView()"
+                class="text-[10px] md:text-xs font-bold text-slate-400 hover:text-primary transition-colors uppercase flex items-center justify-center gap-1 w-full"
+              >
+                <i class="fa-solid fa-rotate"></i> Quét mới
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CỘT 3: LỊCH SỬ (25%) -->
+      <div
+        class="w-full md:w-[25%] border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-panel/30 flex flex-col shrink-0 h-[300px] md:h-auto"
+      >
+        <div class="flex border-b border-gray-200 dark:border-gray-800">
+          <button
+            onclick="showRightTab('history')"
+            id="btn-tab-history"
+            class="flex-1 py-3 text-xs font-bold border-b-2 border-primary text-primary bg-primary/5 transition-colors"
+          >
+            LỊCH SỬ
+          </button>
+          <button
+            onclick="showRightTab('tips')"
+            id="btn-tab-tips"
+            class="flex-1 py-3 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            MẸO HAY
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto custom-scroll p-4 relative">
+          <!-- History -->
+          <div id="tab-history" class="space-y-3">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-[10px] font-bold uppercase text-slate-500"
+                >Mới nhất</span
+              >
+              <button
+                onclick="clearHistory()"
+                class="text-[10px] text-slate-400 hover:text-danger"
+              >
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+            <div id="historyList" class="space-y-2">
+              <div class="text-center py-6 opacity-50">
+                <i
+                  class="fa-regular fa-folder-open text-xl mb-1 text-slate-400"
+                ></i>
+                <p class="text-[10px] text-slate-500">Trống</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tips -->
+          <div id="tab-tips" class="hidden space-y-3">
+            <div
+              class="p-2.5 bg-orange-50 dark:bg-orange-500/10 rounded-lg border border-orange-200 dark:border-orange-500/20"
+            >
+              <h4
+                class="text-xs font-bold text-orange-600 dark:text-orange-400 mb-0.5"
+              >
+                <i class="fa-solid fa-mask mr-1"></i> Giả mạo Brand
+              </h4>
+              <p class="text-[10px] text-slate-600 dark:text-slate-400">
+                Ví dụ: faceb00k.com thay vì facebook.com.
+              </p>
+            </div>
+            <div
+              class="p-2.5 bg-red-50 dark:bg-red-500/10 rounded-lg border border-red-200 dark:border-red-500/20"
+            >
+              <h4
+                class="text-xs font-bold text-red-600 dark:text-red-400 mb-0.5"
+              >
+                <i class="fa-solid fa-key mr-1"></i> Yêu cầu OTP
+              </h4>
+              <p class="text-[10px] text-slate-600 dark:text-slate-400">
+                Không nhập mã OTP ngân hàng vào link lạ.
+              </p>
+            </div>
+            <div
+              class="p-2.5 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg border border-indigo-200 dark:border-indigo-500/20"
+            >
+              <h4
+                class="text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-0.5"
+              >
+                <i class="fa-solid fa-download mr-1"></i> File độc hại
+              </h4>
+              <p class="text-[10px] text-slate-600 dark:text-slate-400">
+                Cẩn thận nếu QR tự động tải file .apk/.exe.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- LOGIC -->
+    <script>
+      const API = "http://127.0.0.1:8000/api";
+      let historyData = [];
+
+      document.addEventListener("DOMContentLoaded", () => {
+        initTheme();
+        loadHistory();
+        document
+          .getElementById("urlInput")
+          .addEventListener("keypress", (e) => {
+            if (e.key === "Enter") checkUrl();
+          });
+      });
+
+      // TABS Right Panel
+      function showRightTab(tab) {
+        document.getElementById("tab-history").classList.add("hidden");
+        document.getElementById("tab-tips").classList.add("hidden");
+        document.getElementById(`tab-${tab}`).classList.remove("hidden");
+
+        const btnHist = document.getElementById("btn-tab-history");
+        const btnTips = document.getElementById("btn-tab-tips");
+
+        if (tab === "history") {
+          btnHist.className =
+            "flex-1 py-3 text-xs font-bold border-b-2 border-primary text-primary bg-primary/5 transition-colors";
+          btnTips.className =
+            "flex-1 py-3 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors";
+        } else {
+          btnTips.className =
+            "flex-1 py-3 text-xs font-bold border-b-2 border-accent text-accent bg-accent/5 transition-colors";
+          btnHist.className =
+            "flex-1 py-3 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors";
+        }
+      }
+
+      // THEME
+      function initTheme() {
+        const saved = localStorage.getItem("theme");
+        if (saved === "light") {
+          document.documentElement.classList.remove("dark");
+          document.documentElement.classList.add("light");
+          document.getElementById("theme-icon").className =
+            "fa-solid fa-moon text-slate-600";
+        } else {
+          document.documentElement.classList.add("dark");
+          document.documentElement.classList.remove("light");
+          document.getElementById("theme-icon").className =
+            "fa-solid fa-sun text-yellow-500";
+        }
+      }
+      function toggleTheme() {
+        const html = document.documentElement;
+        html.classList.toggle("dark");
+        html.classList.toggle("light");
+        const isDark = html.classList.contains("dark");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+        document.getElementById("theme-icon").className = isDark
+          ? "fa-solid fa-sun text-yellow-500"
+          : "fa-solid fa-moon text-slate-600";
+      }
+
+      // INPUT LOGIC
+      function handleFile(input) {
+        const fileName = document.getElementById("fileName");
+        const btn = document.getElementById("btnScanQR");
+        if (input.files && input.files.length > 0) {
+          fileName.textContent = input.files[0].name;
+          fileName.classList.add("text-accent");
+          btn.classList.remove("hidden");
+        } else {
+          fileName.textContent = "Chạm để tải ảnh QR";
+          fileName.classList.remove("text-accent");
+          btn.classList.add("hidden");
+        }
+      }
+
+      // VIEW LOGIC
+      function setView(v) {
+        ["idle", "loading", "result"].forEach((id) =>
+          document.getElementById(`view-${id}`).classList.add("hidden")
+        );
+        document.getElementById(`view-${v}`).classList.remove("hidden");
+      }
+      function resetView() {
+        document.getElementById("urlInput").value = "";
+        document.getElementById("qrFile").value = "";
+        document.getElementById("fileName").textContent = "Chạm để tải ảnh QR";
+        document.getElementById("btnScanQR").classList.add("hidden");
+        setView("idle");
+      }
+
+      // API
+      async function checkUrl() {
+        const url = document.getElementById("urlInput").value.trim();
+        if (!url) return alert("Vui lòng nhập Link!");
+        processReq(() =>
+          fetch(`${API}/check`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url }),
+          })
+        );
+      }
+      async function scanQR() {
+        const file = document.getElementById("qrFile").files[0];
+        if (!file) return alert("Vui lòng chọn ảnh!");
+        const fd = new FormData();
+        fd.append("file", file);
+        processReq(() => fetch(`${API}/scan-qr`, { method: "POST", body: fd }));
+      }
+      async function processReq(fn) {
+        setView("loading");
+        try {
+          const res = await fn();
+          if (!res.ok) throw new Error("API Error");
+          const data = await res.json();
+          setTimeout(() => {
+            renderResult(data);
+            addToHistory(data);
+            setView("result");
+          }, 600);
+        } catch (e) {
+          console.error(e);
+          alert("Lỗi kết nối Server!");
+          setView("idle");
+        }
+      }
+
+      // RENDER RESULT
+      function renderResult(data) {
+        const isSafe = data.risk_level === "Safe" || data.score < 50;
+
+        const els = {
+          icon: document.getElementById("resIcon"),
+          title: document.getElementById("resTitle"),
+          score: document.getElementById("resScore"),
+          badge: document.getElementById("resBadge"),
+          url: document.getElementById("resUrl"),
+          warn: document.getElementById("resWarnings"),
+          rec: document.getElementById("resRec"),
+          recBox: document.getElementById("resRecBox"),
+          header: document.getElementById("resHeader"),
+        };
+
+        els.url.textContent = data.url || data.decoded_url || "Unknown";
+        els.score.textContent = `Risk Score: ${data.score}/100`;
+        els.rec.textContent = data.recommendation;
+
+        if (isSafe) {
+          els.header.className =
+            "p-4 md:p-6 border-b border-emerald-500/20 bg-emerald-500/5 flex justify-between items-start";
+          els.icon.className =
+            "w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-2xl md:text-4xl shadow-inner bg-emerald-500/20 text-emerald-500";
+          els.icon.innerHTML =
+            '<i class="fa-solid fa-check text-emerald-600 dark:text-emerald-400"></i>';
+          els.title.className =
+            "text-xl md:text-2xl font-bold leading-none mb-1 text-emerald-500";
+          els.title.textContent = "AN TOÀN";
+          els.badge.className =
+            "px-3 py-1 rounded text-[10px] font-bold uppercase border bg-emerald-500/10 border-emerald-500/30 text-emerald-500";
+          els.badge.textContent = "SAFE";
+          els.recBox.className =
+            "p-3 rounded-lg border-l-4 border-emerald-500 bg-emerald-500/5";
+        } else {
+          els.header.className =
+            "p-4 md:p-6 border-b border-red-500/20 bg-red-500/5 flex justify-between items-start";
+          els.icon.className =
+            "w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-2xl md:text-4xl shadow-inner bg-red-500/20 text-red-500";
+          els.icon.innerHTML =
+            '<i class="fa-solid fa-triangle-exclamation"></i>';
+          els.title.className =
+            "text-xl md:text-2xl font-bold leading-none mb-1 text-red-500";
+          els.title.textContent = "NGUY HIỂM";
+          els.badge.className =
+            "px-3 py-1 rounded text-[10px] font-bold uppercase border bg-red-500/10 border-red-500/30 text-red-500";
+          els.badge.textContent = "THREAT";
+          els.recBox.className =
+            "p-3 rounded-lg border-l-4 border-red-500 bg-red-500/5";
+        }
+
+        if (data.warnings && data.warnings.length > 0) {
+          els.warn.innerHTML = data.warnings
+            .map(
+              (w) =>
+                `<div class="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"><i class="fa-solid fa-circle-exclamation text-yellow-500 mt-1 text-xs"></i><span>${w}</span></div>`
+            )
+            .join("");
+        } else {
+          els.warn.innerHTML = `<span class="text-slate-500 italic text-sm">Không có cảnh báo.</span>`;
+        }
+      }
+
+      // HISTORY
+      function addToHistory(data) {
+        const isSafe = data.risk_level === "Safe" || data.score < 50;
+        const item = { ...data, isSafe, timestamp: Date.now() };
+        historyData.unshift(item);
+        if (historyData.length > 20) historyData.pop();
+        localStorage.setItem("trustqr_history_v4", JSON.stringify(historyData));
+        renderHistory();
+      }
+      function loadHistory() {
+        const saved = localStorage.getItem("trustqr_history_v4");
+        if (saved) {
+          historyData = JSON.parse(saved);
+          renderHistory();
+        }
+      }
+      function clearHistory() {
+        historyData = [];
+        localStorage.removeItem("trustqr_history_v4");
+        renderHistory();
+      }
+      function viewHist(index) {
+        renderResult(historyData[index]);
+        setView("result");
+        // Scroll to result on mobile
+        if (window.innerWidth < 768) {
+          document
+            .getElementById("view-result")
+            .scrollIntoView({ behavior: "smooth" });
+        }
+      }
+      function renderHistory() {
+        const list = document.getElementById("historyList");
+        if (historyData.length === 0) {
+          list.innerHTML = `<div class="text-center py-6 opacity-50"><i class="fa-regular fa-folder-open text-xl mb-1 text-slate-400"></i><p class="text-[10px] text-slate-500">Trống</p></div>`;
+          return;
+        }
+        list.innerHTML = historyData
+          .map((item, idx) => {
+            const url = item.url || item.decoded_url || "Unknown";
+            const short = url.length > 20 ? url.substring(0, 20) + "..." : url;
+            const time = new Date(item.timestamp).toLocaleTimeString("vi-VN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            const statusColor = item.isSafe
+              ? "border-emerald-500/30 hover:border-emerald-500"
+              : "border-red-500/30 hover:border-red-500";
+            const icon = item.isSafe
+              ? '<i class="fa-solid fa-check text-emerald-500"></i>'
+              : '<i class="fa-solid fa-bug text-red-500"></i>';
+
+            return `
+                <div onclick="viewHist(${idx})" class="p-2.5 rounded-lg border ${statusColor} bg-white dark:bg-panel cursor-pointer transition-all hover:shadow-md group">
+                    <div class="flex items-center gap-3">
+                        <div class="shrink-0 text-sm">${icon}</div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">${short}</p>
+                            <div class="flex justify-between mt-1">
+                                <span class="text-[9px] text-slate-400 font-mono">${time}</span>
+                                <span class="text-[9px] font-bold uppercase ${
+                                  item.isSafe
+                                    ? "text-emerald-500"
+                                    : "text-red-500"
+                                }">${item.isSafe ? "SAFE" : "THREAT"}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+          })
+          .join("");
+      }
+    </script>
+  </body>
+</html>
